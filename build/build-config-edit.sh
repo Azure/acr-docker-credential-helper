@@ -22,7 +22,7 @@ do
     else
         exe_extension=""
     fi
-    outputFile="${bindir}/config-edit-${go_os}${exe_extension}"
+    outputFile="${bindir}/${go_os}/config-edit-${go_os}${exe_extension}"
     echo "Building ${outputFile}..."
     export GOOS=$go_os
     go build -o $outputFile $sourcedir
