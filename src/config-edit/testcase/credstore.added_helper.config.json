@@ -1,0 +1,16 @@
+{
+	"auths": {
+		"": {},
+		"https://index.docker.io/v1/": {
+            "auth": "bla"
+        },
+		"ok.azurecr-test.io": {
+            "auth": "blablabla"
+        }
+	},
+    "NetworksFormat": "something",
+    "credsStore": "invalid",
+	"credHelpers": {
+        "server1": "helper1"
+	}
+}
