@@ -24,6 +24,9 @@ After installing the ACR Docker Credential Helper, login to an Azure Container R
 
 After that, you will be able to use docker normally. This credential helper will help maintaining your credentials.
 
+## Building
+Invoking [build.sh](build.sh) will build and launch a docker container and perform a cross-platform build
+
 ## Troubleshooting
 ### Getting 401 (authentication required)
 
