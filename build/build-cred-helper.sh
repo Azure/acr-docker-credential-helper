@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 bindir=$1
 
 if [[ -z "${bindir}" ]]; then
@@ -29,7 +30,7 @@ do
     else
         exe_extension=""
     fi
-    outputFile="${bindir}/docker-credential-acr-${go_os}${outputSuffix}${exe_extension}"
+    outputFile="${bindir}/${go_os}/${GOARCH}/docker-credential-acr-${go_os}${outputSuffix}${exe_extension}"
     echo "Building ${outputFile} ${buildtags}..."
     export GOOS=$go_os
     go build -o $outputFile ${buildtags} $sourcedir

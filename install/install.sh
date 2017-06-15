@@ -1,13 +1,11 @@
 #!/bin/bash
-baseurl="https://github.com/Azure/acr-docker-credential-helper/releases/download/{TRAVIS_TAG}"
-unamestr=`uname`
+set -e
 
-if [[ "$unamestr" == "Linux" ]]; then
-    os="linux"
-elif [[ "$unamestr" == "Dariwn" ]]; then
-    os="osx"
-else
-    echo "OS $unamestr is not supported currently."
+baseurl="https://aadacr.blob.core.windows.net/acr-docker-credential-helper"
+os=`uname | tr '[:upper:]' '[:lower:]'`
+
+if [[ "$os" != "linux" && "$os" != "darwin" ]]; then
+    echo "Operation System $os is not supported currently."
     exit -1
 fi
 

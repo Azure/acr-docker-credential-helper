@@ -1,4 +1,4 @@
-all: clean_build package generate_install_script
+all: clean_build package
 clean_build: clean make-cred-helper make-config-edit
 
 TRAVIS_BUILD_DIR ?= .
@@ -18,6 +18,3 @@ make-config-edit:
 
 package:
 	bash build/package.sh ${BIN_DIR} ${ARTIFACTS_DIR}
-
-generate_install_script:
-	bash build/generate-install-script.sh ${ARTIFACTS_DIR}

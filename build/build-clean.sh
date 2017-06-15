@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 bindir=$1
 artifactsdir=$2
 

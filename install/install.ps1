@@ -1,5 +1,5 @@
 param (
-    [string] $baseurl = "https://github.com/Azure/acr-docker-credential-helper/releases/download/v0.1.0-alpha",
+    [string] $baseurl = "https://aadacr.blob.core.windows.net/acr-docker-credential-helper",
     [switch] $skipCleanup
 )
 
@@ -10,25 +10,25 @@ if ($systemStr -match '(x64)') {
     $arch = "x86"
 } else {
     Write-Error "Unknown arch $systemStr"
-    exit -1
+    break
 }
 
 if ($arch -ne "amd64") {
     Write-Error "Arch $arch is currently not supported."
-    exit -1
+    break
 }
 
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 
 if (!$isAdmin) {
     Write-Error "Please run this script as administrator"
-    exit -1
+    break
 }
 
 $dockerLocation = $(where.exe docker)
 if (!$dockerLocation) {
-    Write-Error "Please install docker first"
-    exit -1
+    Write-Error "Cannot find docker in path. Ensure it's installed and that its path is accessible."
+    break
 }
 $installLocation = Split-Path $dockerLocation
 
