@@ -7,9 +7,7 @@ if [[ "$(docker images -q ${buildImageName} 2> /dev/null)" == "" ]]; then
 fi
 
 set -e
-
 ./build/build-clean.sh bin artifacts
-
 
 docker build -t ${buildImageName} .
 docker run --name ${buildContainerName} ${buildImageName}
