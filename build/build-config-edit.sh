@@ -1,6 +1,9 @@
 #!/bin/bash
 bindir=$1
-unamestr=`uname`
+
+if [[ -z "${bindir}" ]]; then
+    bindir="$PWD/bin"
+fi
 
 sourcedir="./src/config-edit"
 if [[ ! -d "$sourcedir" ]]; then
@@ -8,22 +11,26 @@ if [[ ! -d "$sourcedir" ]]; then
 	exit -1
 fi
 
-if [[ "$unamestr" == "Linux" ]]; then
-    go_os="linux"
-elif [[ "$unamestr" == "Darwin" ]]; then
-    go_os="darwin"
-elif [[ "$unamestr" == "MSYS_NT-6.3" ]]; then
-    go_os="windows"
-    exe_extension=".exe"
-fi
+export CGO_ENABLED=0
+export GOARCH=amd64
+export GOPATH=$PWD
+echo "Go path = $GOPATH"
+for go_os in "linux" "windows" "darwin"
+do
+    if [[ "$go_os" == "windows" ]]; then
+        exe_extension=".exe"
+    else
+        exe_extension=""
+    fi
+    outputFile="${bindir}/config-edit-${go_os}${exe_extension}"
+    echo "Building ${outputFile}..."
+    export GOOS=$go_os
+    go build -o $outputFile $sourcedir
+    buildExitCode=$?
 
-outputFile="${bindir}/config-edit${exe_extension}"
-echo "Building ${outputFile}..."
-CGO_ENABLED=0 GOOS=$go_os go build -o $outputFile $sourcedir
-buildExitCode=$?
-
-if [[ $buildExitCode == 0 ]]; then
-    echo "Built ${outputFile} successfully"
-else
-    exit $buildExitCode
-fi
+    if [[ $buildExitCode == 0 ]]; then
+        echo "Built ${outputFile} successfully"
+    else
+        exit $buildExitCode
+    fi
+done
