@@ -27,7 +27,7 @@ if (!$isAdmin) {
 
 $dockerLocation = $(where.exe docker)
 if (!$dockerLocation) {
-    Write-Error "Please install docker first"
+    Write-Error "Cannot find docker in path. Ensure it's installed and that its path is accessible."
     break
 }
 $installLocation = Split-Path $dockerLocation

@@ -1,28 +1,30 @@
 # ACR Docker login helper
 
-This is a wrapper for Docker Credential helpers created by Azure Container Registry (ACR) team. This credential helper make use of Azure Active Directory (AAD) to obtain and maintain user's credentials.
+The ACR Docker Credential Helper allows users to sign-in to the Azure Container Registry service using their Azure Active Directory (AAD) credentials. This credential helper is in charge of ensuring that the stored credentials are valid, and when required it also renews the credentials for a repository.
+
+For now, this credential helper works in tandem with the Azure CLI, which is required in order to initiate the credential flow. Once you've successfully logged in to your container registry with the Azure CLI, the credential helper administers the life cycle of your locally stored credential.
 
 ## Prerequisites
 
-- Docker installation is required, of course.
+- [Docker](https://www.docker.com/)
 - [Azure CLI](https://github.com/Azure/azure-cli)
 
 ## Installation
-For windows run the [powershell installation script](https://aka.ms/acr/installaad/win) in administrator mode:
+For Windows, run the [powershell installation script](https://aka.ms/acr/installaad/win) in administrator mode:
 
-`iex ([System.Text.Encoding]::ASCII.GetString((Invoke-WebRequest -Uri https://aka.ms/acr/installaad/win).Content))`
+`iex ([System.Text.Encoding]::UTF8.GetString((Invoke-WebRequest -Uri https://aka.ms/acr/installaad/win).Content))`
 
-For linux, run the [bash installation script](https://aka.ms/acr/installaad/bash) as root:
+For Linux and macOS, run the [bash installation script](https://aka.ms/acr/installaad/bash) as root:
 
 `curl -L https://aka.ms/acr/installaad/bash | sudo /bin/bash`
 
 ## Usage
-To login to an ACR service as followed:
+After installing the ACR Docker Credential Helper, login to an Azure Container Registry using the Azure CLI:
     `az acr login -n <registry name>`
 
-After that, you will be able to use docker normally. This credential helper would help maintaining your AAD access tokens.
+After that, you will be able to use docker normally. This credential helper will help maintaining your credentials.
 
 ## Troubleshooting
-- Why am I getting 401 error (authentication required)?
+### Getting 401 (authentication required)
 
-    If you have not called `az acr login -n <registry>` to log in to your registry for extended period of time, please re-login with that command. If you find yourself having to re-login every hour or so, make sure your system clock time is correct.
+If you have not called `az acr login -n <registry>` to log in to your registry for an extended period of time and you get a 401 error, please log in again. If you find yourself having to log in every hour or so, make sure your computer clock is set to the correct time.

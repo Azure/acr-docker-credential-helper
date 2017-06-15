@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 binroot=$1
 artifactsdir=$2
 
@@ -17,20 +18,22 @@ if [[ ! -d $artifactsdir ]]; then
 fi
 
 for osname in $(ls $binroot) ; do
-    bindir="$binroot/$osname"
-    if [[ -d $bindir ]]; then
-        echo "Packaging for ${osname}"
-        pkgName="docker-credential-acr-${osname}-amd64"
-        pushd $bindir
-        if [[ "$osname" == "windows" ]]; then
-            pkgFile="${pkgName}.zip"
-            zip ${pkgFile} *
-        else
-            pkgFile="${pkgName}.tar.gz"
-            tar czf ${pkgFile} *
+    for arch in $(ls "$binroot/$osname") ; do
+        bindir="$binroot/$osname/$arch"
+        if [[ -d $bindir ]]; then
+            echo "Packaging for ${osname}-${arch}"
+            pkgName="docker-credential-acr-${osname}-${arch}"
+            pushd $bindir
+            if [[ "$osname" == "windows" ]]; then
+                pkgFile="${pkgName}.zip"
+                zip ${pkgFile} *
+            else
+                pkgFile="${pkgName}.tar.gz"
+                tar czf ${pkgFile} *
+            fi
+            popd
+            mv ${bindir}/$pkgFile ${artifactsdir}
+            echo "Packaged in ${pkgFile}"
         fi
-        popd
-        mv ${bindir}/$pkgFile ${artifactsdir}
-        echo "Packaged in ${pkgFile}"
-    fi
+    done
 done

@@ -71,7 +71,7 @@ func GetUsernamePassword(serverAddress string, identityToken string) (user strin
 		var challenge *authDirective
 		if challenge, err = receiveChallengeFromLoginServer(serverAddress); err != nil {
 			// ignore all error when receiving the challenge
-			logrus.Infof("[Azure Login Helper] server %s does not responded with a valid challenge, reverting to default login...\nerror: %s\n", serverAddress, err)
+			logrus.Infof("[Azure Login Helper] server %s didn't respond with a valid challenge, reverting to default login...\nerror: %s\n", serverAddress, err)
 			return "", "", nil
 		}
 		refreshToken, err = performTokenExchange(serverAddress, challenge, acrToken.TenantID, acrToken.Credential)
