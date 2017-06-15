@@ -1,4 +1,4 @@
-# ACR Docker login helper
+# ACR Docker Credential Helper
 
 The ACR Docker Credential Helper allows users to sign-in to the Azure Container Registry service using their Azure Active Directory (AAD) credentials. This credential helper is in charge of ensuring that the stored credentials are valid, and when required it also renews the credentials for a repository.
 
