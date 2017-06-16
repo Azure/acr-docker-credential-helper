@@ -44,7 +44,7 @@ fi
 if [[ $HOME == "/root" ]]; then
    echo "WARNING: Home directory is /root and not pointing to a specific user. This script might not give you the result you want."
    echo "You should run \"sudo -i \${installscript}\" instead."
-   read -p "Exit? (Y)" yn
+   read -p "Exit? (Y/n)" yn
    case $yn in
      [Yy]*) exit 1 ;;
      *) echo "Continuing...";;
@@ -78,7 +78,7 @@ if [[ ! -f "${configFile}" ]]; then
     chown ${scriptRunner} ${configFile}
 fi
 
-./${tempdir}/config-edit-$os --helper acr-${os} --config-file ${configFile}
+./${tempdir}/config-edit --helper acr-${os} --config-file ${configFile} --force
 chown ${scriptRunner} ${configFile}
 
 if [[ -z "$skipCleanup" ]]; then
