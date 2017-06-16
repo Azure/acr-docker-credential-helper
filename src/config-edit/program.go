@@ -135,7 +135,7 @@ func promptForAbort(msg string) error {
 		return nil
 	}
 
-	fmt.Printf("%s [Y/y]", msg)
+	fmt.Printf("%s [Y/n]", msg)
 	var ans string
 	var err error
 	if _, err = fmt.Scanf("%s", &ans); err != nil {
