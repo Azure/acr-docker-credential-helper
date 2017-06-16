@@ -58,11 +58,16 @@ if (!(Test-Path $configDir)) {
 $configFile = Join-Path $configDir "config.json"
 
 if (!(Test-Path $configFile)) {
+    $dummyConfigCreated = $true
     Write-Output '{"auths":{}}' | Out-File $configFile -Encoding ASCII
 }
 
 $configEditPath = [System.IO.Path]::Combine(".", $tempdir, "config-edit.exe")
 &$configEditPath "--helper" "acr-windows" "--config-file" "${configFile}"
+
+if ($dummyConfigCreated) {
+    Remove-Item -Force "${configFile}.bak"
+}
 
 if (!$skipCleanup) {
     Remove-Item -Force -Recurse $tempdir
