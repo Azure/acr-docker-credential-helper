@@ -56,7 +56,7 @@ archiveFile="docker-credential-acr-${os}-${arch}.tar.gz"
 rm -f ${archiveFile}
 rm -rf ${tempdir}
 
-wget ${baseurl}/${archiveFile}
+curl -o ${archiveFile} ${baseurl}/${archiveFile}
 mkdir ${tempdir}
 tar -xf ${archiveFile} -C ${tempdir}
 
@@ -78,7 +78,7 @@ if [[ ! -f "${configFile}" ]]; then
     chown ${scriptRunner} ${configFile}
 fi
 
-./${tempdir}/config-edit --helper acr-${os} --config-file ${configFile}
+./${tempdir}/config-edit-$os --helper acr-${os} --config-file ${configFile}
 chown ${scriptRunner} ${configFile}
 
 if [[ -z "$skipCleanup" ]]; then
