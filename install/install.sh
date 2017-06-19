@@ -74,12 +74,17 @@ if [[ ! -d "${configdir}" ]]; then
 fi
 
 if [[ ! -f "${configFile}" ]]; then
+    dummyConfigCreated="true"
     echo "{\"auths\":{}}" >> ${configFile}
     chown ${scriptRunner} ${configFile}
 fi
 
 ./${tempdir}/config-edit --helper acr-${os} --config-file ${configFile} --force
 chown ${scriptRunner} ${configFile}
+
+if [[ ! -z "${dummyConfigCreated}" ]]; then
+    rm -f "${configFile}.bak"
+fi
 
 if [[ -z "$skipCleanup" ]]; then
     rm -f ${archiveFile}

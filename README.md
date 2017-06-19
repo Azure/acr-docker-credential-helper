@@ -12,20 +12,30 @@ For now, this credential helper works in tandem with the Azure CLI, which is req
 ## Installation
 For Windows, run the [powershell installation script](https://aka.ms/acr/installaad/win) in administrator mode:
 
-`iex ([System.Text.Encoding]::UTF8.GetString((Invoke-WebRequest -Uri https://aka.ms/acr/installaad/win).Content))`
+```iex ([System.Text.Encoding]::UTF8.GetString((Invoke-WebRequest -Uri https://aka.ms/acr/installaad/win).Content))```
 
 For Linux and macOS, run the [bash installation script](https://aka.ms/acr/installaad/bash) as root:
 
-`curl -L https://aka.ms/acr/installaad/bash | sudo /bin/bash`
+```curl -L https://aka.ms/acr/installaad/bash | sudo /bin/bash```
 
 ## Usage
 After installing the ACR Docker Credential Helper, login to an Azure Container Registry using the Azure CLI:
-    `az acr login -n <registry name>`
+
+```az acr login -n <registry name>```
 
 After that, you will be able to use docker normally. This credential helper will help maintaining your credentials.
 
-## Building
-Invoking [build.sh](build.sh) will build and launch a docker container and perform a cross-platform build
+## Developer Guide:
+
+To manually build and launch this credential helper:
+- Invoke [build.sh](build.sh) to build and launch a docker container and perform a cross-platform build.
+- Find the appropriate `docker-credential-acr-<osname>-<arch>` archive in the `artifacts` directory. Extract the appropriate archive for your os and place the `docker-credential-acr-<osname>` executable file to any directory under your `PATH`.
+- Add the following entry to your docker `config.json`
+    ```
+    {
+        "credsStore": "acr-<osname>"
+    }
+    ```
 
 ## Troubleshooting
 ### Getting 401 (authentication required)
