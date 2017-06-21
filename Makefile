@@ -11,7 +11,6 @@ clean:
 
 make-cred-helper:
 	bash build/build-cred-helper.sh ${BIN_DIR}
-	bash build/build-cred-helper.sh ${BIN_DIR} dogfood df
 
 make-config-edit:
 	bash build/build-config-edit.sh ${BIN_DIR}

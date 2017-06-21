@@ -7,14 +7,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
-	"path"
 	"strconv"
 	"strings"
 	"time"
 	"unicode"
 
-	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Sirupsen/logrus"
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -38,8 +35,6 @@ type acrAuthResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-// const NullUsername = "00000000-0000-0000-0000-000000000000"
-
 // 5 minutes buffer time to allow timeshift between local machine and AAD
 const timeShiftBuffer = 300
 
@@ -47,13 +42,13 @@ func (token *acrTokenPayload) isExpiredOrNear() bool {
 	return time.Now().Unix() > token.Expiration-timeShiftBuffer
 }
 
-func getOAuthBaseURL() *url.URL {
-	return &url.URL{
-		Scheme: "https",
-		Host:   constAADServer,
-		Path:   "common/oauth2",
-	}
-}
+// func getOAuthBaseURL() *url.URL {
+// 	return &url.URL{
+// 		Scheme: "https",
+// 		Host:   constAADServer,
+// 		Path:   "common/oauth2",
+// 	}
+// }
 
 // GetUsernamePassword get the AAD based ACR login credentials
 func GetUsernamePassword(serverAddress string, identityToken string) (user string, cred string, err error) {
@@ -158,36 +153,36 @@ func receiveChallengeFromLoginServer(serverAddress string) (*authDirective, erro
 // 	return accessToken.TenantID, adalToken.RefreshToken, nil
 // }
 
-func adalDeviceLogin() (*adal.Token, error) {
-	oauthClient := &http.Client{}
-	authEndpoint := getOAuthBaseURL()
-	authEndpoint.Path = path.Join(authEndpoint.Path, "authorize")
-	tokenEndpoint := getOAuthBaseURL()
-	tokenEndpoint.Path = path.Join(tokenEndpoint.Path, "token")
-	deviceCodeEndpoint := getOAuthBaseURL()
-	deviceCodeEndpoint.Path = path.Join(deviceCodeEndpoint.Path, "devicecode")
+// func adalDeviceLogin() (*adal.Token, error) {
+// 	oauthClient := &http.Client{}
+// 	authEndpoint := getOAuthBaseURL()
+// 	authEndpoint.Path = path.Join(authEndpoint.Path, "authorize")
+// 	tokenEndpoint := getOAuthBaseURL()
+// 	tokenEndpoint.Path = path.Join(tokenEndpoint.Path, "token")
+// 	deviceCodeEndpoint := getOAuthBaseURL()
+// 	deviceCodeEndpoint.Path = path.Join(deviceCodeEndpoint.Path, "devicecode")
 
-	var err error
-	var deviceCode *adal.DeviceCode
-	if deviceCode, err = adal.InitiateDeviceAuth(
-		oauthClient,
-		adal.OAuthConfig{
-			AuthorizeEndpoint:  *authEndpoint,
-			TokenEndpoint:      *tokenEndpoint,
-			DeviceCodeEndpoint: *deviceCodeEndpoint,
-		},
-		constAppID,
-		"https://management.core.windows.net/"); err != nil {
-		return nil, fmt.Errorf("Failed to start device auth flow: %s", err)
-	}
+// 	var err error
+// 	var deviceCode *adal.DeviceCode
+// 	if deviceCode, err = adal.InitiateDeviceAuth(
+// 		oauthClient,
+// 		adal.OAuthConfig{
+// 			AuthorizeEndpoint:  *authEndpoint,
+// 			TokenEndpoint:      *tokenEndpoint,
+// 			DeviceCodeEndpoint: *deviceCodeEndpoint,
+// 		},
+// 		constAppID,
+// 		"https://management.core.windows.net/"); err != nil {
+// 		return nil, fmt.Errorf("Failed to start device auth flow: %s", err)
+// 	}
 
-	fmt.Fprintf(os.Stderr, "%s\n", *deviceCode.Message)
-	var token *adal.Token
-	if token, err = adal.WaitForUserCompletion(oauthClient, deviceCode); err != nil {
-		return nil, fmt.Errorf("Failed to finish device auth flow: %s", err)
-	}
-	return token, nil
-}
+// 	fmt.Fprintf(os.Stderr, "%s\n", *deviceCode.Message)
+// 	var token *adal.Token
+// 	if token, err = adal.WaitForUserCompletion(oauthClient, deviceCode); err != nil {
+// 		return nil, fmt.Errorf("Failed to finish device auth flow: %s", err)
+// 	}
+// 	return token, nil
+// }
 
 func parseAcrToken(identityToken string) (token *acrTokenPayload, err error) {
 	tokenSegments := strings.Split(identityToken, ".")
