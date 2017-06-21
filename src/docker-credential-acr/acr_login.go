@@ -42,14 +42,6 @@ func (token *acrTokenPayload) isExpiredOrNear() bool {
 	return time.Now().Unix() > token.Expiration-timeShiftBuffer
 }
 
-// func getOAuthBaseURL() *url.URL {
-// 	return &url.URL{
-// 		Scheme: "https",
-// 		Host:   constAADServer,
-// 		Path:   "common/oauth2",
-// 	}
-// }
-
 // GetUsernamePassword get the AAD based ACR login credentials
 func GetUsernamePassword(serverAddress string, identityToken string) (user string, cred string, err error) {
 	if identityToken == "" {
@@ -126,63 +118,6 @@ func receiveChallengeFromLoginServer(serverAddress string) (*authDirective, erro
 		realm:   (*authParams)["realm"],
 	}, nil
 }
-
-// func getAADTokensWithDeviceLogin() (tenantID string, refreshToken string, err error) {
-// 	var adalToken *adal.Token
-// 	if adalToken, err = adalDeviceLogin(); err != nil {
-// 		return "", "", err
-// 	}
-
-// 	accessTokenEncoded := adalToken.AccessToken
-// 	accessTokenSplit := strings.Split(accessTokenEncoded, ".")
-// 	if len(accessTokenSplit) < 2 {
-// 		return "", "", fmt.Errorf("invalid encoded id token: %s", accessTokenEncoded)
-// 	}
-
-// 	idPayloadEncoded := accessTokenSplit[1]
-// 	var idJSON []byte
-// 	if idJSON, err = jwt.DecodeSegment(idPayloadEncoded); err != nil {
-// 		return "", "", fmt.Errorf("Error decoding accessToken: %s", err)
-// 	}
-
-// 	var accessToken accessTokenPayload
-// 	if err := json.Unmarshal(idJSON, &accessToken); err != nil {
-// 		return "", "", fmt.Errorf("Error unmarshalling id token: %s", err)
-// 	}
-
-// 	return accessToken.TenantID, adalToken.RefreshToken, nil
-// }
-
-// func adalDeviceLogin() (*adal.Token, error) {
-// 	oauthClient := &http.Client{}
-// 	authEndpoint := getOAuthBaseURL()
-// 	authEndpoint.Path = path.Join(authEndpoint.Path, "authorize")
-// 	tokenEndpoint := getOAuthBaseURL()
-// 	tokenEndpoint.Path = path.Join(tokenEndpoint.Path, "token")
-// 	deviceCodeEndpoint := getOAuthBaseURL()
-// 	deviceCodeEndpoint.Path = path.Join(deviceCodeEndpoint.Path, "devicecode")
-
-// 	var err error
-// 	var deviceCode *adal.DeviceCode
-// 	if deviceCode, err = adal.InitiateDeviceAuth(
-// 		oauthClient,
-// 		adal.OAuthConfig{
-// 			AuthorizeEndpoint:  *authEndpoint,
-// 			TokenEndpoint:      *tokenEndpoint,
-// 			DeviceCodeEndpoint: *deviceCodeEndpoint,
-// 		},
-// 		constAppID,
-// 		"https://management.core.windows.net/"); err != nil {
-// 		return nil, fmt.Errorf("Failed to start device auth flow: %s", err)
-// 	}
-
-// 	fmt.Fprintf(os.Stderr, "%s\n", *deviceCode.Message)
-// 	var token *adal.Token
-// 	if token, err = adal.WaitForUserCompletion(oauthClient, deviceCode); err != nil {
-// 		return nil, fmt.Errorf("Failed to finish device auth flow: %s", err)
-// 	}
-// 	return token, nil
-// }
 
 func parseAcrToken(identityToken string) (token *acrTokenPayload, err error) {
 	tokenSegments := strings.Split(identityToken, ".")
