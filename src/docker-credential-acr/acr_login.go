@@ -221,7 +221,7 @@ func parseAssignments(statements string) (*map[string]string, error) {
 				// no more comma, done
 				return &result, nil
 			} else if statements[commaIndex] != ',' {
-				// expect comma immidately after close quote
+				// expect comma immediately after close quote
 				return nil, errorMsg
 			} else {
 				cursor = commaIndex + 1

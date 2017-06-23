@@ -36,11 +36,6 @@ while getopts ":b:s:" opt; do
     esac
 done
 
-if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root"
-   exit 1
-fi
-
 if [[ $HOME == "/root" ]]; then
    echo "WARNING: Home directory is /root and not pointing to a specific user. This script might not give you the result you want."
    echo "You should run \"sudo -i \${installscript}\" instead."
@@ -60,9 +55,38 @@ curl -o ${archiveFile} ${baseurl}/${archiveFile}
 mkdir ${tempdir}
 tar -xf ${archiveFile} -C ${tempdir}
 
-installLocation="/usr/local/bin"
-cp ${tempdir}/docker-credential-acr-${os} $installLocation
-chmod +x $installLocation/docker-credential-acr-${os}
+defaultInstallLocation="/usr/local/bin"
+## This is an attempt to check whether we are running the script interactively
+## It can't detect when user pipes the script into bash, in that case default would still be used
+case $- in
+*i*)
+    echo "Non-interactive shell detected. ACR Credentials Helper will be installed in default location: ${defaultInstallLocation}"
+;;
+*)
+    echo "Please enter desired install location or press enter to install in ${defaultInstallLocation}. Note that you will need to add the install location to PATH."
+    read installLocation
+esac
+
+## If user choose to install into default location, we will elevate the permission while copying the file
+if [[ -z "${installLocation}" ]]; then
+    installLocation=$defaultInstallLocation
+    echo "Installing in default location ${installLocation}..."
+    if [[ $EUID -ne 0 ]]; then
+        sudoCmd=`which sudo`
+        if [[ -z "$sudoCmd" ]]; then
+            echo "Unable to elevate permissions."
+            exit 1
+        fi
+        sudoOption="$sudoCmd "
+    fi
+else
+    if [[ ! -d "${installLocation}" ]]; then
+        mkdir -p ${installLocation}
+    fi
+fi
+
+${sudoOption}cp ${tempdir}/docker-credential-acr-${os} ${installLocation}
+${sudoOption}chmod +x ${installLocation}/docker-credential-acr-${os}
 
 configdir="$HOME/.docker"
 configFile="${configdir}/config.json"
@@ -70,17 +94,14 @@ scriptRunner=`ls -ld $HOME | awk '{print $3}'`
 
 if [[ ! -d "${configdir}" ]]; then
     mkdir ${configdir}
-    chown ${scriptRunner} ${configdir}
 fi
 
 if [[ ! -f "${configFile}" ]]; then
     dummyConfigCreated="true"
     echo "{\"auths\":{}}" >> ${configFile}
-    chown ${scriptRunner} ${configFile}
 fi
 
 ./${tempdir}/config-edit --helper acr-${os} --config-file ${configFile} --force
-chown ${scriptRunner} ${configFile}
 
 if [[ ! -z "${dummyConfigCreated}" ]]; then
     rm -f "${configFile}.bak"
