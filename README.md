@@ -14,9 +14,9 @@ For Windows, run the [powershell installation script](https://aka.ms/acr/install
 
 ```iex ([System.Text.Encoding]::UTF8.GetString((Invoke-WebRequest -Uri https://aka.ms/acr/installaad/win).Content))```
 
-For Linux and macOS, run the [bash installation script](https://aka.ms/acr/installaad/bash) as root:
+For Linux and macOS, run the [bash installation script](https://aka.ms/acr/installaad/bash):
 
-```curl -L https://aka.ms/acr/installaad/bash | sudo /bin/bash```
+```curl -L https://aka.ms/acr/installaad/bash | /bin/bash```
 
 ## Usage
 After installing the ACR Docker Credential Helper, login to an Azure Container Registry using the Azure CLI:
