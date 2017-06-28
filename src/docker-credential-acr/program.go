@@ -8,6 +8,10 @@ import (
 
 	"path/filepath"
 
+	"strings"
+
+	"strconv"
+
 	dockerCommand "github.com/docker/cli/cli/command"
 	cliconfig "github.com/docker/cli/cli/config"
 	"github.com/docker/cli/cli/config/configfile"
@@ -22,49 +26,90 @@ type storeWrapper struct {
 }
 
 const tokenUsername = "<token>"
+const chunkPostfix = "-acr-credential-helper"
+const maxChunksAllowed = 16
+
+var helperMaxBlobLength = 4096
 
 func (w *storeWrapper) Add(cred *helperCredentials.Credentials) error {
 	store := *w.store
-	config := dockerTypes.AuthConfig{
-		ServerAddress: cred.ServerURL,
-		Username:      cred.Username,
+	chunks, err := toChunks(cred)
+	if err != nil {
+		return err
 	}
-	if cred.Username == tokenUsername {
-		config.IdentityToken = cred.Secret
-	} else {
-		config.Password = cred.Secret
+	for _, chunk := range chunks {
+		config := dockerTypes.AuthConfig{
+			ServerAddress: chunk.ServerURL,
+			Username:      chunk.Username,
+		}
+		if chunk.Username == tokenUsername {
+			config.IdentityToken = chunk.Secret
+		} else {
+			config.Password = chunk.Secret
+		}
+		if err := store.Store(config); err != nil {
+			return err
+		}
 	}
-	return store.Store(config)
+	return nil
 }
 
+// Note that this method is designed to swallow credentials not found error to workaround
+// a docker cli bug where it could try to delete an entry form store multiple times when
+// a non-default registry is used
 func (w *storeWrapper) Delete(serverURL string) error {
+	chunkCount, _, err := w.getAggregatedAuthConfigs(serverURL)
+	if err != nil {
+		return err
+	}
+
 	store := *w.store
-	return store.Erase(serverURL)
+	for i := chunkCount - 1; i >= 0; i-- {
+		err := store.Erase(toChunkName(serverURL, i))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (w *storeWrapper) Get(serverURL string) (string, string, error) {
 	user, cred, err := w.getFromStore(serverURL)
 	if user == tokenUsername {
-		// no password/token is saved
-		if cred == "" {
-			// pass through
-			return "", "", nil
-			// NOTE: currently docker calls Get from credstore even if the
-			// user passes -u and -p. If we enable interactive login during
-			// Get, this will result in docker prompt for interactive login
-			// even if -u -p. Make sure that docker stop calling Get when -u
-			// and -p before we can even think about enable interactive login
-		}
+		// NOTE: currently docker calls Get from credstore even if the
+		// user passes -u and -p. If we enable interactive login during
+		// Get, this will result in docker prompt for interactive login
+		// even if -u -p. Make sure that docker stop calling Get when -u
+		// and -p before we can even think about enable interactive login
 		user, cred, err = GetUsernamePassword(serverURL, cred)
 	}
 	return user, cred, err
 }
 
-func (w *storeWrapper) getFromStore(serverURL string) (string, string, error) {
+func (w *storeWrapper) List() (map[string]string, error) {
 	store := *w.store
-	cred, err := store.Get(serverURL)
+	storeResults, err := store.GetAll()
+	if err != nil {
+		return map[string]string{}, err
+	}
+	results := make(map[string]string)
+	for k, v := range storeResults {
+		if !isChunkName(k) {
+			results[k] = v.Username
+		}
+	}
+	return results, nil
+}
+
+func (w *storeWrapper) getFromStore(serverURL string) (string, string, error) {
+	numChunks, cred, err := w.getAggregatedAuthConfigs(serverURL)
 	if err != nil {
 		return "", "", err
+	}
+
+	if numChunks == 0 {
+		return "", "", helperCredentials.NewErrCredentialsNotFound()
 	}
 
 	var secret string
@@ -81,17 +126,47 @@ func (w *storeWrapper) getFromStore(serverURL string) (string, string, error) {
 	return cred.Username, secret, nil
 }
 
-func (w *storeWrapper) List() (map[string]string, error) {
+// Note that filestore does not throw error when not found
+// This should be considered a bug, we are working around it
+func (w *storeWrapper) safeGet(key string) (dockerTypes.AuthConfig, error) {
 	store := *w.store
-	storeResults, err := store.GetAll()
-	if err != nil {
-		return map[string]string{}, err
+	cred, err := store.Get(key)
+	if err == nil && (cred.Password == "" && cred.IdentityToken == "") {
+		err = helperCredentials.NewErrCredentialsNotFound()
 	}
-	results := make(map[string]string)
-	for k, v := range storeResults {
-		results[k] = v.Username
+	return cred, err
+}
+
+// Note: this method does not give an error when nothing is found
+func (w *storeWrapper) getAggregatedAuthConfigs(serverURL string) (int, dockerTypes.AuthConfig, error) {
+	var aggregate dockerTypes.AuthConfig
+	chunkCount := 0
+	for {
+		chunk, getChunkErr := w.safeGet(toChunkName(serverURL, chunkCount))
+		if getChunkErr == nil {
+			if chunkCount == 0 {
+				aggregate = chunk
+			} else {
+				if aggregate.Username != chunk.Username {
+					return 0, dockerTypes.AuthConfig{}, fmt.Errorf("Chunk mismatch detected for %s", serverURL)
+				}
+				aggregate.IdentityToken = aggregate.IdentityToken + chunk.IdentityToken
+				// Note that when we split up the chunks we split up the Secret field, the value is supposed to go to
+				// IdentityToken field. This line is just in case it went to the password field instead
+				aggregate.Password = aggregate.Password + chunk.Password
+			}
+			chunkCount++
+			if chunkCount > maxChunksAllowed {
+				return 0, dockerTypes.AuthConfig{}, fmt.Errorf("Too many chunk detected for %s", serverURL)
+			}
+		} else if helperCredentials.IsErrCredentialsNotFound(getChunkErr) {
+			// end of chunks
+			break
+		} else {
+			return 0, dockerTypes.AuthConfig{}, fmt.Errorf("Error gathering credential chunks: %s", getChunkErr)
+		}
 	}
-	return results, nil
+	return chunkCount, aggregate, nil
 }
 
 func getCredentialsStore() (*dockerCredentials.Store, error) {
@@ -107,6 +182,9 @@ func getCredentialsStore() (*dockerCredentials.Store, error) {
 	// if they are found. Otherwise it would revert to using native
 	if configHelperFound() {
 		store := dockerCredentials.NewNativeStore(config, helperSuffix)
+		if helperSuffix == "wincred" {
+			helperMaxBlobLength = 5 * 512
+		}
 		return &store, nil
 	}
 
@@ -173,6 +251,46 @@ func configHelperFound() bool {
 	lookupCmd := exec.Command(exeFinder, helperName)
 	err := lookupCmd.Run()
 	return err == nil
+}
+
+func toChunks(cred *helperCredentials.Credentials) ([]helperCredentials.Credentials, error) {
+	numChunks := getNumChunks(len(cred.Secret), helperMaxBlobLength)
+	if numChunks > maxChunksAllowed {
+		return []helperCredentials.Credentials{}, fmt.Errorf("Input credential is too big")
+	}
+	result := make([]helperCredentials.Credentials, numChunks)
+	for i := 0; i < numChunks; i++ {
+		result[i].Username = cred.Username
+		lower := i * helperMaxBlobLength
+		var upper int
+		if i == numChunks-1 {
+			upper = len(cred.Secret)
+		} else {
+			upper = lower + helperMaxBlobLength
+		}
+		result[i].Secret = cred.Secret[lower:upper]
+		result[i].ServerURL = toChunkName(cred.ServerURL, i)
+	}
+	return result[:], nil
+}
+
+func toChunkName(server string, index int) string {
+	if index == 0 {
+		return server
+	}
+	return server + strconv.Itoa(index-1) + chunkPostfix
+}
+
+func getNumChunks(strLen int, chunkLen int) int {
+	division := strLen / chunkLen
+	if division == 0 || strLen%chunkLen != 0 {
+		return division + 1
+	}
+	return division
+}
+
+func isChunkName(key string) bool {
+	return strings.HasSuffix(key, chunkPostfix)
 }
 
 func main() {
