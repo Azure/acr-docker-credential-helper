@@ -29,6 +29,8 @@ const tokenUsername = "<token>"
 const chunkPostfix = "-acr-credential-helper"
 const maxChunksAllowed = 16
 
+var helperMaxBlobLength = 4096
+
 func (w *storeWrapper) Add(cred *helperCredentials.Credentials) error {
 	store := *w.store
 	chunks, err := toChunks(cred)
@@ -182,6 +184,9 @@ func getCredentialsStore() (*dockerCredentials.Store, error) {
 	// if they are found. Otherwise it would revert to using native
 	if configHelperFound() {
 		store := dockerCredentials.NewNativeStore(config, helperSuffix)
+		if helperSuffix == "wincred" {
+			helperMaxBlobLength = 5 * 512
+		}
 		return &store, nil
 	}
 
