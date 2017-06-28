@@ -151,6 +151,8 @@ func (w *storeWrapper) getAggregatedAuthConfigs(serverURL string) (int, dockerTy
 					return 0, dockerTypes.AuthConfig{}, fmt.Errorf("Chunk mismatch detected for %s", serverURL)
 				}
 				aggregate.IdentityToken = aggregate.IdentityToken + chunk.IdentityToken
+				// Note that when we split up the chunks we split up the Secret field, the value is supposed to go to
+				// IdentityToken field. This line is just in case it went to the password field instead
 				aggregate.Password = aggregate.Password + chunk.Password
 			}
 			chunkCount++
