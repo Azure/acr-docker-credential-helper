@@ -2,5 +2,5 @@
 
 package main
 
-const helperSuffix = "wincred"
+const helperSuffix = ""
 const exeFinder = "where.exe"
