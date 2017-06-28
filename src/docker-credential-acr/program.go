@@ -105,7 +105,7 @@ func getCredentialsStore() (*dockerCredentials.Store, error) {
 	// secretservice for linux
 	// osxkeychain for osx
 	// if they are found. Otherwise it would revert to using native
-	if configHelperFound() {
+	if helperSuffix != "" && configHelperFound() {
 		store := dockerCredentials.NewNativeStore(config, helperSuffix)
 		return &store, nil
 	}
