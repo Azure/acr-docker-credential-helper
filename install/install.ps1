@@ -3,6 +3,16 @@ param (
     [switch] $skipCleanup
 )
 
+Write-Host "ACR Credential Helper currently does not support Windows Credential Manager because Windows Credential Manager only support saving tokens with less than 2.5KB blob size."
+Write-Host "1. A json file will be used to store all your credentials."
+Write-Host "2. You will have to re-login to any existing Docker registry after the installation."
+$acceptFileStore = Read-Host "Continue? [Y/n]"
+
+if (!$acceptFileStore.ToLower().StartsWith("y")) {
+    Write-Error "User aborted."
+    break
+}
+
 $systemStr = (Get-WmiObject -Class Win32_ComputerSystem).SystemType
 if ($systemStr -match '(x64)') {
     $arch = "amd64"
