@@ -126,14 +126,12 @@ func (w *storeWrapper) getFromStore(serverURL string) (string, string, error) {
 	return cred.Username, secret, nil
 }
 
-var emptyConfig = dockerTypes.AuthConfig{}
-
 // Note that filestore does not throw error when not found
 // This should be considered a bug, we are working around it
 func (w *storeWrapper) safeGet(key string) (dockerTypes.AuthConfig, error) {
 	store := *w.store
 	cred, err := store.Get(key)
-	if err == nil && cred == emptyConfig {
+	if err == nil && (cred.Password == "" && cred.IdentityToken == "") {
 		err = helperCredentials.NewErrCredentialsNotFound()
 	}
 	return cred, err
