@@ -37,6 +37,17 @@ type acrAuthResponse struct {
 
 // 5 minutes buffer time to allow timeshift between local machine and AAD
 const timeShiftBuffer = 300
+const userAgentHeader = "User-Agent"
+
+var client = &http.Client{}
+var userAgentVersion string
+
+func getUserAgent() string {
+	if userAgentVersion == "" {
+		return "acr-docker-credential-helper"
+	}
+	return userAgentVersion
+}
 
 func (token *acrTokenPayload) isExpiredOrNear() bool {
 	return time.Now().Unix() > token.Expiration-timeShiftBuffer
@@ -74,8 +85,11 @@ func receiveChallengeFromLoginServer(serverAddress string) (*authDirective, erro
 		Path:   "v2/",
 	}
 	var err error
+	var r *http.Request
+	r, _ = http.NewRequest("GET", challengeURL.String(), nil)
+	r.Header.Add(userAgentHeader, getUserAgent())
 	var challenge *http.Response
-	if challenge, err = http.Get(challengeURL.String()); err != nil {
+	if challenge, err = client.Do(r); err != nil {
 		return nil, fmt.Errorf("Error reaching registry endpoint %s, error: %s", challengeURL.String(), err)
 	}
 	defer challenge.Body.Close()
@@ -155,9 +169,10 @@ func performTokenExchange(
 	}
 	authEndpoint := fmt.Sprintf("%s://%s/oauth2/exchange", realmURL.Scheme, realmURL.Host)
 
-	client := &http.Client{}
 	datac := data.Encode()
-	r, _ := http.NewRequest("POST", authEndpoint, bytes.NewBufferString(datac))
+	var r *http.Request
+	r, _ = http.NewRequest("POST", authEndpoint, bytes.NewBufferString(datac))
+	r.Header.Add(userAgentHeader, getUserAgent())
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	r.Header.Add("Content-Length", strconv.Itoa(len(datac)))
 
