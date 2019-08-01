@@ -8,7 +8,7 @@ Write-Host "1. A json file will be used to store all your credentials."
 Write-Host "2. You will have to re-login to any existing Docker registry after the installation."
 $acceptFileStore = Read-Host "Continue? [Y/n]"
 
-if (!$acceptFileStore.ToLower().StartsWith("y")) {
+if ($acceptFileStore -and !$acceptFileStore.ToLower().StartsWith("y")) {
     Write-Error "User aborted."
     break
 }
