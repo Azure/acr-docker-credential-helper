@@ -21,7 +21,13 @@ export CGO_ENABLED=0
 export GOARCH=$goarc
 export GOPATH=$PWD
 echo "Go path = $GOPATH"
-for go_os in "linux" "windows" "darwin"
+export go_oses="linux windows darwin"
+
+if [ "$goarc" == "arm64" ]; then
+    export go_oses="linux"
+fi
+
+for go_os in $go_oses
 do
     if [[ "$go_os" == "windows" ]]; then
         exe_extension=".exe"
