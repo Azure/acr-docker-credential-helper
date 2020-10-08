@@ -35,7 +35,7 @@ if (!$isAdmin) {
     break
 }
 
-$dockerLocation = $(where.exe docker)
+$dockerLocation = $(where.exe docker.exe)
 if (!$dockerLocation) {
     Write-Error "Cannot find docker in path. Ensure it's installed and that its path is accessible."
     break
