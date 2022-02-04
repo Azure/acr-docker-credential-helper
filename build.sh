@@ -1,7 +1,7 @@
 #!/bin/bash
 buildImageName="acr-cred-helper-build-img"
 buildContainerName="acr-cred-helper-build"
-if [ "$(uname -m)" == "aarch64" ]
+if [ "$(uname -m)" == "aarch64" ] || [ "$(uname -m)" == "arm64" ]
 then
    buildGoArch="arm64"
 else

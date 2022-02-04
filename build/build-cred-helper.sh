@@ -32,7 +32,7 @@ export GOPATH=$PWD
 export go_oses="linux windows darwin"
 
 if [ "$goarc" == "arm64" ]; then
-    export go_oses="linux"
+    export go_oses="linux darwin"
 fi
 
 for go_os in $go_oses

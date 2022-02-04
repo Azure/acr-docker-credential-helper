@@ -15,12 +15,14 @@ case "$archstr" in
     i?86) arch="x86" ;;
     amd64) arch="amd64" ;;
     x86_64) arch="amd64" ;;
+    arm64) arch="arm64" ;;
+    aarch64) arch="arm64" ;;
     *)
         echo "Unknown arch $archstr."
         exit -1
 esac
 
-if [[ "$arch" -ne "amd64" ]]; then
+if [[ "$arch" -ne "amd64" && "$arch" -ne "arm64" ]]; then
     echo "Arch $arch is currently not supported."
     exit -1
 fi
