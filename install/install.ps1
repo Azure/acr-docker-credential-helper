@@ -40,6 +40,9 @@ if (!$dockerLocation) {
     Write-Error "Cannot find docker in path. Ensure it's installed and that its path is accessible."
     break
 }
+if($dockerLocation -is [System.Array]) {
+    $dockerLocation = $dockerLocation[0]
+}
 $installLocation = Split-Path $dockerLocation
 
 $tempdir = "deleteme"
