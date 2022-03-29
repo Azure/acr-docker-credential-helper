@@ -1,4 +1,10 @@
+ 
 # ACR Docker Credential Helper
+
+|:warning:  Deprecation notice | 
+|:-----------------------------|
+| **acr-docker-crential-helper** is deprecated without replacement. Consider using other [authentication][acr-auth] methods. | 
+
 
 The ACR Docker Credential Helper allows users to sign-in to the Azure Container Registry service using their Azure Active Directory (AAD) credentials. This credential helper is in charge of ensuring that the stored credentials are valid, and when required it also renews the credentials for a repository.
 
@@ -41,3 +47,5 @@ To manually build and launch this credential helper:
 ### Getting 401 (authentication required)
 
 If you have not called `az acr login -n <registry>` to log in to your registry for an extended period of time and you get a 401 error, please log in again. If you find yourself having to log in every hour or so, make sure your computer clock is set to the correct time.
+
+[acr-auth]:      https://docs.microsoft.com/azure/container-registry/container-registry-authentication
