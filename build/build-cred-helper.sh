@@ -1,9 +1,14 @@
 #!/bin/bash
 set -e
 bindir=$1
+goarc=$2
 
 if [[ -z "${bindir}" ]]; then
     bindir="$PWD/bin"
+fi
+
+if [[ -z "${goarc}" ]]; then
+    goarch="amd64"
 fi
 
 sourcedir="./src/docker-credential-acr"
@@ -22,9 +27,15 @@ fi
 
 export BUILDVERSION=acr-docker-credential-helper`date -u +.%Y%m%d.%H%M%S`
 export CGO_ENABLED=0
-export GOARCH=amd64
+export GOARCH=$goarc
 export GOPATH=$PWD
-for go_os in "linux" "windows" "darwin"
+export go_oses="linux windows darwin"
+
+if [ "$goarc" == "arm64" ]; then
+    export go_oses="linux"
+fi
+
+for go_os in $go_oses
 do
     export GOOS=$go_os
     if [[ "$GOOS" == "windows" ]]; then
